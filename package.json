@@ -1,0 +1,45 @@
+{
+  "type": "module",
+  "name": "stork-network-automation",
+  "version": "1.0.0",
+  "description": "Automated validation bot for Stork Network Automation",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rpchubs/Stork-Network-Automation.git"
+  },
+  "keywords": [
+    "stork",
+    "oracle",
+    "validation",
+    "bot",
+    "automation",
+    "stork network",
+    "stork automation",
+    "stork network bot",
+    "stork farm"
+  ],
+  "author": "RPC Hubs",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/rpchubs/Stork-Network-Automation/issues"
+  },
+  "homepage": "https://github.com/rpchubs/Stork-Network-Automation#readme",
+  "dependencies": {
+    "amazon-cognito-identity-js": "^6.3.1",
+    "axios": "^1.6.2",
+    "blessed": "^0.1.81",
+    "blessed-contrib": "^4.11.0",
+    "fs": "0.0.1-security",
+    "https-proxy-agent": "^7.0.2",
+    "path": "^0.12.7",
+    "socks-proxy-agent": "^8.0.1"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
