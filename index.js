@@ -215,6 +215,7 @@ class TokenManager {
         }
     }
     async updateTokens(result) {
+        log(`token expiresIn => ${result.expiresIn}`);
         this.accessToken = result.accessToken;
         this.idToken = result.idToken;
         this.refreshToken = result.refreshToken;
@@ -502,12 +503,9 @@ if (!isMainThread) {
     }
 
     async function main() {
-        if (!validateConfig()) {
-            process.exit(1);
-        }
+        if (!validateConfig()) process.exit(1);
 
         await logCurrentIpForAccount(jobs);
-
         const maskedUser = maskEmail(accounts[jobs].username);
         log(`Starting process for user: ${maskedUser}`);
 
@@ -517,18 +515,21 @@ if (!isMainThread) {
         try {
             await tokenManager.getValidToken();
             log('Sign-in/auth flow completed successfully');
-            runValidationProcess(tokenManager);
 
-            setInterval(async () => {
+            tokenManager.refreshInterval = setInterval(async () => {
                 await tokenManager.getValidToken();
                 log('Refreshed token via Cognito service');
             }, 50 * 60 * 1000);
 
+            await runValidationProcess(tokenManager);
+
+            clearInterval(tokenManager.refreshInterval);
         } catch (error) {
             log(`Startup failed: ${error.message}`, 'ERROR');
             process.exit(1);
         }
     }
+
 
     let jobs = 0;
 
