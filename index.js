@@ -460,12 +460,12 @@ if (!isMainThread) {
             log(`Failed validations: ${invalidNow}`);
             log('---------------- DONE ----------------');
 
-            if (jobs < accounts.length) {
-                setTimeout(() => main(), config.stork.intervalSeconds * 1000);
-            } else if (jobs == accounts.length - 1 || jobs === accounts.length) {
-                jobs = 0;
-                setTimeout(() => main(), config.stork.intervalSeconds * 1000);
-            }
+            // if (jobs < accounts.length) {
+            //     setTimeout(() => main(), config.stork.intervalSeconds * 1000);
+            // } else if (jobs == accounts.length - 1 || jobs === accounts.length) {
+            //     jobs = 0;
+            //     setTimeout(() => main(), config.stork.intervalSeconds * 1000);
+            // }
         } catch (error) {
             log(`Validation sequence aborted: ${error.message}`, 'ERROR');
         }
@@ -503,33 +503,47 @@ if (!isMainThread) {
     }
 
     async function main() {
-        if (!validateConfig()) process.exit(1);
+        if (!validateConfig()) {
+            log('Configuration invalid. Retrying in 10 seconds...', 'ERROR');
+            setTimeout(() => main(), 10 * 1000);
+            return;
+        }
 
-        await logCurrentIpForAccount(jobs);
-        const maskedUser = maskEmail(accounts[jobs].username);
-        log(`Starting process for user: ${maskedUser}`);
-
-        const tokenManager = new TokenManager(jobs);
-        jobs++;
-
+        let currentJob = jobs;
         try {
+            await logCurrentIpForAccount(currentJob);
+            const maskedUser = maskEmail(accounts[currentJob].username);
+            log(`Starting process for user: ${maskedUser}`);
+
+            const tokenManager = new TokenManager(currentJob);
+            jobs++;
+
             await tokenManager.getValidToken();
             log('Sign-in/auth flow completed successfully');
 
             tokenManager.refreshInterval = setInterval(async () => {
-                await tokenManager.getValidToken();
-                log('Refreshed token via Cognito service');
+                try {
+                    await tokenManager.getValidToken();
+                    log('Refreshed token via Cognito service');
+                } catch (err) {
+                    log(`Token refresh error: ${err.message}`, 'ERROR');
+                }
             }, 50 * 60 * 1000);
 
             await runValidationProcess(tokenManager);
-
             clearInterval(tokenManager.refreshInterval);
+
         } catch (error) {
-            log(`Startup failed: ${error.message}`, 'ERROR');
-            process.exit(1);
+            log(`Error in processing account ${accounts[currentJob].username}: ${error.message}`, 'ERROR');
+        } finally {
+            if (jobs < accounts.length) {
+                setTimeout(() => main(), config.stork.intervalSeconds * 1000);
+            } else {
+                jobs = 0;
+                setTimeout(() => main(), config.stork.intervalSeconds * 1000);
+            }
         }
     }
-
 
     let jobs = 0;
 
